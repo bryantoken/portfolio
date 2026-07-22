@@ -1,0 +1,183 @@
+// bryantoken — digital garden / plataforma IndieWeb
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum NoteStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// Estágio de crescimento (digital garden)
+enum Stage {
+  SEEDLING // semente — ideia bruta
+  BUDDING // brotando — em desenvolvimento
+  EVERGREEN // perene — maturado
+}
+
+// Tipo de bloco da barra lateral (desktop) — curada pelo admin
+enum WidgetKind {
+  IMAGE // imagem/gif enviada (com link opcional)
+  LINK // link de texto (blogroll / botão)
+  HTML // trecho HTML confiável (embed, marquee…)
+}
+
+// Bloco da barra lateral estilo "ano 2000" — só o admin edita
+model Widget {
+  id        String     @id @default(cuid())
+  kind      WidgetKind @default(IMAGE)
+  title     String?
+  imageUrl  String? // /uploads/... quando enviada
+  linkUrl   String?
+  body      String?    @db.Text // HTML confiável (kind=HTML)
+  position  Int        @default(0)
+  createdAt DateTime   @default(now())
+
+  @@index([position])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  name         String?
+  passwordHash String
+  avatarUrl    String?
+  bio          String?
+  role         Role     @default(MEMBER)
+  keyBalance   Int      @default(0) // saldo de $KEY (reputação/utilidade off-chain)
+  seal         String?  // selo cosmético comprado com $KEY (ex.: "guardiao")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  notes      Note[]
+  comments   Comment[]
+  likes      Like[]
+  bookmarks  Bookmark[]
+  keyLedger  KeyLedger[]
+  unlocks    Unlock[]
+}
+
+model Note {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  content     String     @db.Text // markdown
+  excerpt     String?
+  coverImage  String?
+  status      NoteStatus @default(DRAFT)
+  stage       Stage      @default(SEEDLING)
+  gated       Boolean    @default(false) // nota "trancada" — custa $KEY para ler na íntegra
+  plantedAt   DateTime   @default(now())
+  tendedAt    DateTime   @updatedAt
+  publishedAt DateTime?
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  tags      Tag[]      @relation("NoteTags")
+  comments  Comment[]
+  likes     Like[]
+  bookmarks Bookmark[]
+  unlocks   Unlock[]
+
+  // Backlinks (wiki-links [[slug]])
+  outgoing Backlink[] @relation("SourceNote")
+  incoming Backlink[] @relation("TargetNote")
+
+  @@index([status, publishedAt])
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  slug  String @unique
+  name  String
+  notes Note[] @relation("NoteTags")
+}
+
+model Backlink {
+  id           String @id @default(cuid())
+  sourceNoteId String
+  targetNoteId String
+  source       Note   @relation("SourceNote", fields: [sourceNoteId], references: [id], onDelete: Cascade)
+  target       Note   @relation("TargetNote", fields: [targetNoteId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceNoteId, targetNoteId])
+  @@index([targetNoteId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  noteId String
+  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   Comment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentThread")
+
+  @@index([noteId, createdAt])
+}
+
+model Like {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteId String
+  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, noteId])
+}
+
+model Bookmark {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteId String
+  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, noteId])
+}
+
+// Livro-razão do token de reputação/utilidade $KEY (off-chain)
+model KeyLedger {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  delta     Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Nota trancada desbloqueada por um usuário (gasto de $KEY)
+model Unlock {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, noteId])
+  @@index([userId])
+}

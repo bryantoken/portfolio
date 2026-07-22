@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code",
+    Menlo, Consolas, monospace;
+  --bean: #170312;
+  --rosewood: #cf2457;
+  --teal: #2176ae;
+  --snow: #fffbff;
+}
+
+@layer base {
+  html {
+    background: var(--bean);
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--bean);
+    color: #f7ecf3;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* espaço p/ bottom bar flutuante no mobile */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Campos de formulário sempre legíveis (texto claro, sem sumir no fundo) */
+  input,
+  textarea,
+  select {
+    color: #f7ecf3;
+    caret-color: var(--rosewood);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: #8a6478;
+  }
+  /* Autofill do Chrome não pode deixar o texto invisível */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f7ecf3;
+    -webkit-box-shadow: 0 0 0 1000px #2a0f24 inset;
+    caret-color: #f7ecf3;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  ::selection {
+    background: var(--rosewood);
+    color: var(--snow);
+  }
+
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bean);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3a1830;
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #5a2848;
+  }
+}
+
+@layer components {
+  /* ── Texturas / atmosfera medieval-tech ─────────────────────── */
+  .grain::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 55% 45% at 12% 8%, rgba(207, 36, 87, 0.14), transparent 60%),
+      radial-gradient(ellipse 45% 40% at 88% 92%, rgba(33, 118, 174, 0.1), transparent 60%);
+  }
+
+  /* ── Prosa (notas) — fonte de escrita serifada ──────────────── */
+  .prose-garden {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino,
+      "Book Antiqua", Georgia, Cambria, serif;
+    font-size: 1.2rem;
+    line-height: 1.75;
+    color: #e7d3df;
+    max-width: 42rem;
+  }
+  .prose-garden h1,
+  .prose-garden h2,
+  .prose-garden h3 {
+    color: var(--snow);
+    line-height: 1.1;
+    margin: 2.2rem 0 0.9rem;
+    letter-spacing: -0.01em;
+  }
+  .prose-garden h1 { font-size: 2.6rem; }
+  .prose-garden h2 { font-size: 2rem; }
+  .prose-garden h3 { font-size: 1.5rem; }
+  .prose-garden p { margin: 1.1rem 0; }
+  .prose-garden a {
+    color: #4a97cb;
+    text-decoration: underline;
+    text-decoration-color: rgba(74, 151, 203, 0.4);
+    text-underline-offset: 3px;
+  }
+  .prose-garden a:hover { color: #7bb6db; }
+  .prose-garden a.wikilink {
+    color: var(--rosewood);
+    text-decoration-color: rgba(207, 36, 87, 0.4);
+    font-style: italic;
+  }
+  .prose-garden a.wikilink.missing {
+    color: #8a6478;
+    cursor: help;
+  }
+  .prose-garden strong { color: var(--snow); font-weight: 700; }
+  .prose-garden em { font-style: italic; }
+  .prose-garden mark {
+    background: rgba(207, 36, 87, 0.22);
+    color: #ffd9e5;
+    padding: 0.05em 0.25em;
+    border-radius: 3px;
+  }
+  .prose-garden blockquote {
+    border-left: 3px solid var(--rosewood);
+    padding: 0.4rem 0 0.4rem 1.4rem;
+    margin: 1.6rem 0;
+    color: #d8bccb;
+    font-style: italic;
+    font-size: 1.35rem;
+  }
+  .prose-garden ul,
+  .prose-garden ol { margin: 1.1rem 0; padding-left: 1.4rem; }
+  .prose-garden li { margin: 0.4rem 0; }
+  .prose-garden ul li { list-style: none; position: relative; }
+  .prose-garden ul li::before {
+    content: "";
+    position: absolute;
+    left: -1.1rem;
+    top: 0.7em;
+    width: 5px;
+    height: 5px;
+    background: var(--rosewood);
+    transform: rotate(45deg);
+  }
+  .prose-garden img,
+  .prose-garden video {
+    max-width: 100%;
+    border-radius: 10px;
+    margin: 1.6rem 0;
+    border: 1px solid #3a1830;
+  }
+  .prose-garden hr {
+    border: none;
+    text-align: center;
+    margin: 2.5rem 0;
+  }
+  .prose-garden hr::before {
+    content: "❧";
+    color: #8a6478;
+    font-size: 1.4rem;
+  }
+  .prose-garden code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: #2a0f24;
+    padding: 0.12em 0.4em;
+    border-radius: 4px;
+    color: #ffb3cb;
+  }
+  .prose-garden pre {
+    font-family: var(--font-mono);
+    background: #12060f;
+    border: 1px solid #3a1830;
+    border-radius: 10px;
+    padding: 1.1rem 1.3rem;
+    overflow-x: auto;
+    margin: 1.6rem 0;
+    font-size: 0.9rem;
+  }
+  .prose-garden pre code {
+    background: none;
+    padding: 0;
+    color: #d8bccb;
+  }
+
+  /* Régua ornamental de seção */
+  .section-rule {
+    flex: 0 0 2rem;
+    height: 1px;
+    background: linear-gradient(to right, #5a2848, transparent);
+  }
+}
+
+/* Campos de texto usam fonte de sistema — a fonte de interface (Courbe)
+   não possui o glifo U+25CF que o navegador usa pra mascarar senha, então
+   as "bolinhas" ficavam invisíveis. Fora de @layer p/ vencer as utilities
+   do Tailwind (ex.: .font-sans) independentemente de ordem/especificidade. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
